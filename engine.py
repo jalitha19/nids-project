@@ -57,6 +57,29 @@ class DetectionEngine:
                                     f"{len(self.syn_tracker[src_ip])} SYN packets in {cfg['window']}s")
         return None
 
+    def check_icmp_sweep(self, src_ip):
+        cfg = THRESHOLDS["icmp_sweep"]
+        now = time.time()
+
+        self.icmp_tracker[src_ip].append(now)
+        self.icmp_tracker[src_ip] = self._prune(self.icmp_tracker[src_ip], cfg["window"])
+
+        if len(self.icmp_tracker[src_ip]) >= cfg["count"]:
+            return self._make_alert("ICMP_SWEEP", src_ip, "medium",
+                                    f"{len(self.icmp_tracker[src_ip])} ICMP packets in {cfg['window']}s")
+        return None
+
+    def check_ssh_brute(self, src_ip):
+        cfg = THRESHOLDS["ssh_brute"]
+        now = time.time()
+
+        self.ssh_tracker[src_ip].append(now)
+        self.ssh_tracker[src_ip] = self._prune(self.ssh_tracker[src_ip], cfg["window"])
+
+        if len(self.ssh_tracker[src_ip]) >= cfg["count"]:
+            return self._make_alert("SSH_BRUTE_FORCE", src_ip, "high",
+                                    f"{len(self.ssh_tracker[src_ip])} SSH SYN attempts in {cfg['window']}s")
+        return None
 
     def analyze(self, packet_info):
         alerts = []
